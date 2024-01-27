@@ -47,4 +47,17 @@ class AuthController extends Controller
 
         return response(['user' => Auth::user(), 'access_token' => $accessToken]);
     }
+
+    public function me(Request $request)
+    {
+        $user = $request->user();
+        $response = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->getRoleNames()[0]
+        ];
+
+        return response($response);
+    }
 }
