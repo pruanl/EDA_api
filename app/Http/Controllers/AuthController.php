@@ -14,11 +14,24 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
+
         $validatedData = $request->validate([
             'name' => 'required|max:55',
             'email' => 'email|required|unique:users',
-            'password' => 'required|confirmed'
+            'password' => 'required|confirmed',
+            'user_type' => 'required|integer|between:1,4'
         ]);
+
+        //verifica se o usuário logado tem permissão para criar usuários, apenas usuários com a role de admin podem criar usuários
+        if (!Auth::user()->hasRole('admin') && $request->user_type == 1) {
+            return response(['message' => 'Você não tem permissão para criar usuários administradores']);
+        }
+
+        //verifica se o usuário logado tem permissão para criar usuários, apenas usuários com a role de admin ou secretaria podem criar usuários secretaria
+
+        if (!Auth::user()->hasRole('admin') && !Auth::user()->hasRole('diretor') && $request->user_type == 2) {
+            return response(['message' => 'Você não tem permissão para criar usuários secretaria']);
+        }
 
         $validatedData['password'] = Hash::make($request->password);
 
@@ -26,7 +39,7 @@ class AuthController extends Controller
 
         $accessToken = $user->createToken('authToken')->plainTextToken;
 
-        return response([ 'user' => $user, 'access_token' => $accessToken]);
+        return response([ 'user' => $user, 'role' => $user->getRoleNames()[0], 'access_token' => $accessToken]);
     }
 
     /**
@@ -59,5 +72,11 @@ class AuthController extends Controller
         ];
 
         return response($response);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->tokens()->delete();
+        return response(['message' => 'Logged out']);
     }
 }

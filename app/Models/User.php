@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'user_type'
     ];
 
     /**
@@ -43,4 +44,26 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    // crie uma função after create
+    public static function boot()
+    {
+        parent::boot();
+        static::creating(function ($user) {
+            switch ($user->user_type) {
+                case 1:
+                    $user->assignRole('admin');
+                    break;
+                case 2:
+                    $user->assignRole('diretor');
+                    break;
+                case 3:
+                    $user->assignRole('professor');
+                    break;
+                case 4:
+                    $user->assignRole('aluno');
+                    break;
+            }
+        });
+    }
 }
